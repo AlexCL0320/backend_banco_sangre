@@ -11,38 +11,40 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
+import dj_database_url
+from datetime import timedelta
+import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-xuoh@_!v-a8ol1ti!*g%z$udlv4-o(3+=n^bc-#s53u9b0y44p'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', cast=bool, default=False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'django_extensions',
-    'django.contrib.admin', 
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     'rest_framework',
     'rest_framework.authtoken',
-    
-    'corsheaders',  # lo agregaste para las solicitudes del frontend
+
+    'corsheaders',
 
     'usuario',
     'rol',
@@ -54,10 +56,10 @@ INSTALLED_APPS = [
     'cita',
 ]
 
-
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',# lo agrege para las solicitudes del fron
+    'corsheaders.middleware.CorsMiddleware',  # debe ir primero
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # para archivos estáticos en producción
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -71,7 +73,7 @@ ROOT_URLCONF = 'bancoSangre.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [],  # si tienes templates globales aquí se agregan las rutas
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -88,22 +90,17 @@ WSGI_APPLICATION = 'bancoSangre.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'banco_sangre',
-        'USER': 'postgres',
-        'PASSWORD': '12345678',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
+
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -121,7 +118,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 LANGUAGE_CODE = 'es-mx'
 
@@ -133,21 +129,20 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# lo agrege para las solicitudes del fron
-# ======== CONFIGURACIÓN CORS ========
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
 
+
+# CORS configuration
+
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='').split(',')
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = [
@@ -161,9 +156,11 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
-#para los roles y permisos 
+
+
+# REST Framework configuration
+
 REST_FRAMEWORK = {
-    
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
@@ -175,14 +172,16 @@ REST_FRAMEWORK = {
     ],
 }
 
-#para usar el modelo usuario por defecto
+# Custom user model
+
 AUTH_USER_MODEL = 'usuario.Usuario'
-from datetime import timedelta
+
+
+# JWT settings
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),  # Esto hará que el token expire en 1 hora
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Esto hará que el refresh token expire en 7 días
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
-
