@@ -9,7 +9,6 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from django.http import HttpResponse
-from usuario.api.views import UsuarioViewSet, UsuarioAutenticadoView, RegistroView  # agrega RegistroView
 
 from donador.api.views_mapa import donadores_para_mapa
 from usuario.api.views import UsuarioViewSet
@@ -46,7 +45,4 @@ urlpatterns = [
     path('api/donador/', include('donador.api.urls')),
 
     path('api/cita/', include('cita.api.urls')),
-
-    path('registro/', RegistroView.as_view(), name='registro'),  # agrega esta línea
-
 ]
