@@ -3,31 +3,30 @@ URL configuration for bancoSangre project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from donador.api.views_mapa import donadores_para_mapa  # Asegúrate de importar
+from django.http import HttpResponse
 
+from donador.api.views_mapa import donadores_para_mapa
 from usuario.api.views import UsuarioViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+# Ruta raíz para evitar error 404 en /
+def home(request):
+    return HttpResponse("Bienvenido a la API Banco Sangre")
 
 router = DefaultRouter()
 router.register('usuarios', UsuarioViewSet, basename='usuario')
 
 urlpatterns = [
+    path('', home),  # Ruta raíz
+
     path('api/mapa/donadores/', donadores_para_mapa),
     path('admin/', admin.site.urls),
+
     path('api/', include(router.urls)),
 
     # JWT endpoints
@@ -41,10 +40,9 @@ urlpatterns = [
     path('api/coordenada/', include('coordenada.api.urls')),
     path('api/direccion/', include('direccion.api.urls')),
     path('api/donador/', include('donador.api.urls')),
-    #agregado por dalia para obtener el usuario logado
-    path('api/', include('usuario.api.urls')),
-     path('api/cita/', include('cita.api.urls')),
-     path('api/cita/', include('cita.api.urls')),
 
+    # Eliminada la inclusión duplicada de 'usuario.api.urls' para evitar conflictos
+    # path('api/', include('usuario.api.urls')),  # Comentar o eliminar si hay conflicto con router
+
+    path('api/cita/', include('cita.api.urls')),  # Solo una vez
 ]
-
