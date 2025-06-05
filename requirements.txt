@@ -8,3 +8,6 @@ tzdata==2025.1
 django-cors-headers==4.7.0
 setuptools==65.5.0
 django-filter
+dj_database_url==1.2.0
+django_extensions==3.3.1
+Whitenoise
