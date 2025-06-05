@@ -1,1 +1,1 @@
-web: gunicorn nombre_proyecto.wsgi
+web: gunicorn banco_sangre_angeles.wsgi
