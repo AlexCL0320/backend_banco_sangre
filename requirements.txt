@@ -12,3 +12,4 @@ dj-database-url==1.2.0  # el nombre correcto en PyPI es dj-database-url (guion)
 django-extensions==3.2.3
 whitenoise==6.5.0
 python-decouple==3.8  # para usar la librería decouple (según tu settings)
+gunicorn
