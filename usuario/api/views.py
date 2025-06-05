@@ -44,3 +44,37 @@ class UsuarioAutenticadoView(APIView):
         }
         
         return Response(user_data)
+
+class RegistroView(APIView):
+    permission_classes = [AllowAny]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.rol_repo = DjangoRolRepository()
+        self.user_repo = DjangoUsuarioRepository(self.rol_repo)
+        self.crear_usuario_uc = CrearUsuarioUseCase(self.user_repo, self.rol_repo)
+
+    def post(self, request):
+        serializer = UsuarioSerializer(data=request.data)
+        if serializer.is_valid():
+            data = serializer.validated_data
+            try:
+                rol_id = data.get('rol_id')
+                password = data.get('password')
+
+                usuario_creado = self.crear_usuario_uc.execute(
+                    nombre_usuario=data['nombre_usuario'],
+                    correo=data['correo'],
+                    sexo=data['sexo'],
+                    password=password,
+                    rol_id=rol_id
+                )
+                response_serializer = UsuarioSerializer(usuario_creado)
+                return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+            except EmailAlreadyExistsException as e:
+                return Response({'correo': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            except RolNotFoundException as e:
+                return Response({'rol_id': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response({'detail': 'Error interno en el registro', 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
